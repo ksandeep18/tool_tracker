@@ -227,40 +227,78 @@ app.post('/checkout', authenticateToken, authorizeRole(['user', 'tool_admin', 's
 // POST /return: Mark a tool as returned
 app.post('/return', authenticateToken, authorizeRole(['user', 'tool_admin', 'super_admin']), async (req, res) => {
     const { tool_id } = req.body;
-    const user_id = req.user.id; // Not strictly used for return logic below, but good to know who is returning
+    const user_id = req.user.id;
 
     if (!tool_id) {
         return res.status(400).json({ message: 'Tool ID is required for return.' });
     }
 
+    const client = await pool.connect();
     try {
-        const toolResult = await pool.query('SELECT * FROM tools WHERE id = $1', [tool_id]);
-        const tool = toolResult.rows[0];
+        console.log(`Initiating return for tool_id: ${tool_id} by user_id: ${user_id}`);
+        await client.query('BEGIN');
 
+        const toolResult = await client.query('SELECT * FROM tools WHERE id = $1', [tool_id]);
+        console.log('Tool lookup result:', toolResult.rows);
+
+        const tool = toolResult.rows[0];
         if (!tool) {
+            console.warn('Tool not found.');
+            await client.query('ROLLBACK');
             return res.status(404).json({ message: 'Tool not found.' });
         }
+
         if (tool.status === 'available') {
+            console.warn('Tool is already available.');
+            await client.query('ROLLBACK');
             return res.status(409).json({ message: 'Tool is already available.' });
         }
 
-        await pool.query(
+        await client.query(
             'UPDATE tools SET status = $1, assigned_to = NULL WHERE id = $2',
             ['available', tool_id]
         );
+        console.log('Tool status updated to available.');
 
-        await pool.query(
-            'UPDATE history SET return_date = CURRENT_TIMESTAMP WHERE tool_id = $1 AND return_date IS NULL ORDER BY checkout_date DESC LIMIT 1',
+        const historyResult = await client.query(
+            `SELECT id FROM history 
+             WHERE tool_id = $1 AND return_date IS NULL 
+             ORDER BY checkout_date DESC 
+             LIMIT 1`,
             [tool_id]
         );
+        console.log('History lookup result:', historyResult.rows);
 
+        if (historyResult.rows.length === 0) {
+            console.warn('No open history record found for this tool.');
+            await client.query('ROLLBACK');
+            return res.status(404).json({ message: 'No open history record found for this tool.' });
+        }
+
+        const historyId = historyResult.rows[0].id;
+
+        await client.query(
+            `UPDATE history 
+             SET return_date = CURRENT_TIMESTAMP 
+             WHERE id = $1`,
+            [historyId]
+        );
+        console.log('Return date updated in history.');
+
+        await client.query('COMMIT');
         res.status(200).json({ message: 'Tool returned successfully.' });
 
     } catch (err) {
-        console.error('Error during tool return:', err.message);
+        await client.query('ROLLBACK');
+        console.error('❌ Error during tool return:', err.stack);
         res.status(500).json({ message: 'Server error during tool return.' });
+    } finally {
+        client.release();
     }
 });
+
+
+
 
 // GET /history: View all checkout/return history
 app.get('/history', authenticateToken, authorizeRole(['tool_admin', 'super_admin']), async (req, res) => {
