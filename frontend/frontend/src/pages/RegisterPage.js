@@ -1,7 +1,6 @@
-// src/pages/RegisterPage.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext'; // Import your AuthContext
+import { useAuth } from '../context/AuthContext';
 
 function RegisterPage() {
     const [name, setName] = useState('');
@@ -10,13 +9,13 @@ function RegisterPage() {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
-    const { register } = useAuth(); // Get the register function from AuthContext
-    const navigate = useNavigate(); // Hook for navigation
+    const { register } = useAuth();
+    const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError(''); // Clear previous errors
-        setSuccessMessage(''); // Clear previous success messages
+        setError('');
+        setSuccessMessage('');
 
         if (!name || !password || !confirmPassword) {
             setError('All fields are required.');
@@ -33,91 +32,83 @@ function RegisterPage() {
             return;
         }
 
-        const result = await register(name, team, password); // Call the register function from context
+        const result = await register(name, team, password);
 
         if (result.success) {
-            setSuccessMessage(result.message || 'Registration successful! You can now log in.');
-            // Optionally clear form or redirect after a delay
-            setTimeout(() => navigate('/login'), 2000); // Redirect to login after 2 seconds
+            setSuccessMessage(result.message || 'Registration successful! Redirecting to login...');
+            setTimeout(() => navigate('/login'), 2000);
         } else {
             setError(result.error || 'Registration failed. Please try again.');
         }
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-            <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-                <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">Register</h2>
-                <form onSubmit={handleSubmit} className="space-y-5">
-                    <div>
-                        <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="name">
-                            Username:
-                        </label>
+        <div className="d-flex justify-content-center align-items-center min-vh-100 bg-light p-3">
+            <div className="card shadow p-4" style={{ maxWidth: '460px', width: '100%' }}>
+                <h2 className="text-center text-success mb-4">Register</h2>
+
+                <form onSubmit={handleSubmit}>
+                    <div className="mb-3">
+                        <label htmlFor="name" className="form-label">Username</label>
                         <input
                             type="text"
                             id="name"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="form-control"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             required
                         />
                     </div>
-                    <div>
-                        <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="team">
-                            Team (Optional):
-                        </label>
+
+                    <div className="mb-3">
+                        <label htmlFor="team" className="form-label">Team (Optional)</label>
                         <input
                             type="text"
                             id="team"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="form-control"
                             value={team}
                             onChange={(e) => setTeam(e.target.value)}
                         />
                     </div>
-                    <div>
-                        <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="password">
-                            Password:
-                        </label>
+
+                    <div className="mb-3">
+                        <label htmlFor="password" className="form-label">Password</label>
                         <input
                             type="password"
                             id="password"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="form-control"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
                         />
                     </div>
-                    <div>
-                        <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="confirmPassword">
-                            Confirm Password:
-                        </label>
+
+                    <div className="mb-3">
+                        <label htmlFor="confirmPassword" className="form-label">Confirm Password</label>
                         <input
                             type="password"
                             id="confirmPassword"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="form-control"
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             required
                         />
                     </div>
-                    {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-                    {successMessage && <p className="text-green-500 text-sm text-center">{successMessage}</p>}
-                    <button
-                        type="submit"
-                        className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-200"
-                    >
-                        Register
-                    </button>
+
+                    {error && <div className="alert alert-danger text-center py-2">{error}</div>}
+                    {successMessage && <div className="alert alert-success text-center py-2">{successMessage}</div>}
+
+                    <button type="submit" className="btn btn-success w-100">Register</button>
                 </form>
-                <p className="mt-6 text-center text-gray-600 text-sm">
-                    Already have an account?{' '}
-                    <button
-                        onClick={() => navigate('/login')}
-                        className="text-blue-600 hover:underline font-semibold"
-                    >
-                        Login here
-                    </button>
-                </p>
+
+                <div className="text-center mt-4">
+                    <small className="text-muted">
+                        Already have an account?{' '}
+                        <button onClick={() => navigate('/login')} className="btn btn-link p-0">
+                            Login here
+                        </button>
+                    </small>
+                </div>
             </div>
         </div>
     );

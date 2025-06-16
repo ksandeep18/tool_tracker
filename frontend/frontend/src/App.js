@@ -22,37 +22,28 @@ const Navbar = () => {
     ];
 
     return (
-        <nav className="bg-gray-800 text-white p-4 shadow-md">
-            <div className="container mx-auto flex flex-col md:flex-row justify-between items-center space-y-2 md:space-y-0">
-                <Link to="/home" className="text-2xl font-bold text-blue-300 hover:text-blue-200 transition duration-200">
-                    Tool Tracker
-                </Link>
-                <div className="flex flex-col md:flex-row items-center space-y-2 md:space-x-6 md:space-y-0">
-                    <ul className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-6">
+        <nav className="navbar navbar-expand-lg navbar-light bg-light shadow-sm sticky-top">
+            <div className="container-fluid">
+                <Link className="navbar-brand fw-bold text-primary" to="/home">ToolTracker</Link>
+                <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span className="navbar-toggler-icon"></span>
+                </button>
+                <div className="collapse navbar-collapse" id="navbarNav">
+                    <ul className="navbar-nav me-auto mb-2 mb-lg-0">
                         {navItems.map((item) => (
                             hasRole(item.roles) && (
-                                <li key={item.path}>
-                                    <Link
-                                        to={item.path}
-                                        className="text-gray-300 hover:text-white px-3 py-2 rounded-md transition duration-200 text-lg font-medium"
-                                    >
-                                        {item.name}
-                                    </Link>
+                                <li className="nav-item" key={item.path}>
+                                    <Link className="nav-link" to={item.path}>{item.name}</Link>
                                 </li>
                             )
                         ))}
                     </ul>
                     {user && (
-                        <div className="flex items-center space-x-4">
-                            <span className="text-sm text-gray-300">
-                                Logged in as: <span className="font-semibold capitalize">{user.name}</span> (<span className="capitalize">{user.role.replace('_', ' ')}</span>)
+                        <div className="d-flex align-items-center gap-3">
+                            <span className="text-muted">
+                                Welcome, <strong>{user.name}</strong> ({user.role.replace('_', ' ')})
                             </span>
-                            <button
-                                onClick={logout}
-                                className="bg-red-500 hover:bg-red-600 text-white py-1.5 px-4 rounded-md shadow-sm transition duration-200 text-sm font-medium"
-                            >
-                                Logout
-                            </button>
+                            <button className="btn btn-outline-danger btn-sm" onClick={logout}>Logout</button>
                         </div>
                     )}
                 </div>
@@ -61,121 +52,91 @@ const Navbar = () => {
     );
 };
 
+// --- Footer Component ---
+const Footer = () => (
+    <footer className="bg-light text-center py-3 mt-auto border-top">
+        <div className="container">
+            <span className="text-muted small">© 2025 ToolTracker | Made by Sandeep | Team Spardhak | ATV Vehicle Club, NIT Warangal</span>
+        </div>
+    </footer>
+);
+
 // --- Protected Route Component ---
 const ProtectedRoute = ({ children, allowedRoles }) => {
     const { isAuthenticated, loading, hasRole } = useAuth();
 
     if (loading) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 font-inter">
-                <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500 mb-4"></div>
-                <p className="text-lg font-semibold text-gray-700">Loading application...</p>
-            </div>
-        );
-    }
-
-    if (!isAuthenticated) {
-        return <Navigate to="/login" replace />;
-    }
-
-    if (allowedRoles && !hasRole(allowedRoles)) {
-        return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 font-inter p-4">
-                <Navbar /> {/* Display navbar even on access denied */}
-                <div className="bg-white p-8 rounded-lg shadow-lg text-center mt-8">
-                    <h2 className="text-3xl font-bold text-red-600 mb-4">Access Denied</h2>
-                    <p className="text-gray-700">You do not have the necessary permissions to view this page.</p>
-                    <button
-                        onClick={() => window.history.back()}
-                        className="mt-6 bg-blue-600 text-white py-2 px-5 rounded-md hover:bg-blue-700 transition duration-200"
-                    >
-                        Go Back
-                    </button>
+            <div className="d-flex justify-content-center align-items-center vh-100">
+                <div className="spinner-border text-primary" role="status">
+                    <span className="visually-hidden">Loading...</span>
                 </div>
             </div>
         );
     }
 
-    // Render Navbar above the protected content
+    if (!isAuthenticated) return <Navigate to="/login" replace />;
+    if (allowedRoles && !hasRole(allowedRoles)) {
+        return (
+            <div className="container mt-5 text-center">
+                <h2 className="text-danger mb-3">Access Denied</h2>
+                <p>You do not have the necessary permissions to view this page.</p>
+                <button className="btn btn-primary" onClick={() => window.history.back()}>Go Back</button>
+            </div>
+        );
+    }
+
     return (
-        <div className="min-h-screen flex flex-col font-inter">
+        <div className="d-flex flex-column min-vh-100">
             <Navbar />
-            <main className="flex-grow">
+            <main className="flex-fill">
                 {children}
             </main>
+            <Footer />
         </div>
     );
 };
-
 
 function App() {
     return (
         <Router>
             <AuthProvider>
                 <Routes>
-                    {/* Public Routes */}
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/register" element={<RegisterPage />} />
-
-                    {/* Default redirect to login */}
                     <Route path="/" element={<Navigate to="/login" replace />} />
 
-                    {/* Protected Routes (requires authentication and potentially roles) */}
-                    <Route
-                        path="/home"
-                        element={
-                            <ProtectedRoute>
-                                <HomePage />
-                            </ProtectedRoute>
-                        }
-                    />
-                     <Route
-                        path="/tools"
-                        element={
-                            <ProtectedRoute allowedRoles={['user', 'tool_admin', 'super_admin']}>
-                                <ToolsListPage />
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/admin/tools"
-                        element={
-                            <ProtectedRoute allowedRoles={['tool_admin', 'super_admin']}>
-                                <ToolManagementPage />
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/admin/users"
-                        element={
-                            <ProtectedRoute allowedRoles={['super_admin']}>
-                                <UserManagementPage />
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/admin/history"
-                        element={
-                            <ProtectedRoute allowedRoles={['tool_admin', 'super_admin']}>
-                                <HistoryPage />
-                            </ProtectedRoute>
-                        }
-                    />
+                    <Route path="/home" element={
+                        <ProtectedRoute>
+                            <HomePage />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/tools" element={
+                        <ProtectedRoute allowedRoles={["user", "tool_admin", "super_admin"]}>
+                            <ToolsListPage />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/admin/tools" element={
+                        <ProtectedRoute allowedRoles={["tool_admin", "super_admin"]}>
+                            <ToolManagementPage />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/admin/users" element={
+                        <ProtectedRoute allowedRoles={["super_admin"]}>
+                            <UserManagementPage />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/admin/history" element={
+                        <ProtectedRoute allowedRoles={["tool_admin", "super_admin"]}>
+                            <HistoryPage />
+                        </ProtectedRoute>
+                    } />
 
-                    {/* Fallback for unknown routes */}
                     <Route path="*" element={
-                        <div className="min-h-screen flex flex-col font-inter bg-gray-100">
-                             <Navbar /> {/* Display navbar even on 404 */}
-                            <div className="flex flex-col items-center justify-center flex-grow p-4">
-                                <h1 className="text-4xl font-bold text-gray-800 mb-4">404 - Page Not Found</h1>
-                                <p className="text-lg text-gray-600">The page you're looking for does not exist.</p>
-                                <button
-                                    onClick={() => window.history.back()}
-                                    className="mt-6 bg-blue-600 text-white py-2 px-5 rounded-md hover:bg-blue-700 transition duration-200"
-                                >
-                                    Go Back
-                                </button>
-                            </div>
+                        <div className="container text-center mt-5">
+                            <h1 className="display-4 text-danger">404 - Page Not Found</h1>
+                            <p className="lead">The page you're looking for does not exist.</p>
+                            <button className="btn btn-primary" onClick={() => window.history.back()}>Go Back</button>
                         </div>
                     } />
                 </Routes>

@@ -2,6 +2,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
+// Import Bootstrap CSS (assuming you've added the CDN link to public/index.html)
+// No direct import needed here if using CDN in public/index.html
 
 function UserManagementPage() {
     const { hasRole } = useAuth();
@@ -151,21 +153,24 @@ function UserManagementPage() {
 
     if (loading) {
         return (
-            <div className="flex justify-center items-center h-screen">
-                <p className="text-xl font-semibold text-gray-700">Loading user data...</p>
+            <div className="d-flex justify-content-center align-items-center vh-100">
+                <div className="spinner-border text-primary" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                </div>
+                <p className="ms-3 text-secondary">Loading user data...</p>
             </div>
         );
     }
 
     if (!hasRole('super_admin')) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
-                <div className="bg-white p-8 rounded-lg shadow-lg text-center">
-                    <h2 className="text-3xl font-bold text-red-600 mb-4">Access Denied</h2>
-                    <p className="text-gray-700">You do not have the necessary permissions to view this page.</p>
+            <div className="d-flex flex-column justify-content-center align-items-center vh-100 bg-light p-4">
+                <div className="card shadow-lg p-5 text-center">
+                    <h2 className="card-title text-danger mb-4">Access Denied</h2>
+                    <p className="card-text text-muted">You do not have the necessary permissions to view this page.</p>
                     <button
                         onClick={() => window.history.back()}
-                        className="mt-6 bg-blue-600 text-white py-2 px-5 rounded-md hover:bg-blue-700 transition duration-200"
+                        className="btn btn-primary mt-4"
                     >
                         Go Back
                     </button>
@@ -175,71 +180,59 @@ function UserManagementPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-100 p-4">
-            <div className="max-w-5xl mx-auto bg-white p-6 rounded-lg shadow-md">
-                <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">User Management</h2>
+        <div className="container mt-4 mb-5">
+            <div className="card shadow-lg p-4">
+                <h2 className="card-title text-center text-dark mb-4">User Management</h2>
 
-                {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">{error}</div>}
-                {message && <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4">{message}</div>}
+                {error && <div className="alert alert-danger" role="alert">{error}</div>}
+                {message && <div className="alert alert-success" role="alert">{message}</div>}
 
-                <div className="mb-6 text-right">
+                <div className="d-flex justify-content-end mb-3">
                     <button
                         onClick={() => setShowAddModal(true)}
-                        className="bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-200"
+                        className="btn btn-primary"
                     >
-                        Add New User
+                        <i className="fas fa-user-plus me-2"></i> Add New User
                     </button>
                 </div>
 
                 {users.length === 0 ? (
-                    <p className="text-center text-gray-600">No users found.</p>
+                    <p className="text-center text-muted">No users found.</p>
                 ) : (
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full bg-white border border-gray-200 rounded-lg">
-                            <thead className="bg-gray-200">
+                    <div className="table-responsive">
+                        <table className="table table-striped table-hover border">
+                            <thead className="table-light">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider rounded-tl-lg">
-                                        Username
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                                        Team
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                                        Role
-                                    </th>
-                                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-600 uppercase tracking-wider rounded-tr-lg">
-                                        Actions
-                                    </th>
+                                    <th scope="col">Username</th>
+                                    <th scope="col">Team</th>
+                                    <th scope="col">Role</th>
+                                    <th scope="col" className="text-center">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-200">
+                            <tbody>
                                 {users.map((user) => (
-                                    <tr key={user.id} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                            {user.name}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                                            {user.team || 'N/A'}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm capitalize">
-                                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                                user.role === 'super_admin' ? 'bg-purple-100 text-purple-800' :
-                                                user.role === 'tool_admin' ? 'bg-blue-100 text-blue-800' :
-                                                'bg-gray-100 text-gray-800'
+                                    <tr key={user.id}>
+                                        <td>{user.name}</td>
+                                        <td>{user.team || 'N/A'}</td>
+                                        <td>
+                                            <span className={`badge ${
+                                                user.role === 'super_admin' ? 'bg-danger' :
+                                                user.role === 'tool_admin' ? 'bg-info' :
+                                                'bg-secondary'
                                             }`}>
                                                 {user.role.replace('_', ' ')}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-2">
+                                        <td className="text-center">
                                             <button
                                                 onClick={() => openEditModal(user)}
-                                                className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-3 rounded-md shadow-sm transition duration-200 text-xs"
+                                                className="btn btn-sm btn-warning me-2"
                                             >
                                                 Edit
                                             </button>
                                             <button
                                                 onClick={() => handleDeleteUser(user.id)}
-                                                className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-3 rounded-md shadow-sm transition duration-200 text-xs"
+                                                className="btn btn-sm btn-danger"
                                             >
                                                 Delete
                                             </button>
@@ -253,166 +246,137 @@ function UserManagementPage() {
             </div>
 
             {/* Add User Modal */}
-            {showAddModal && (
-                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center p-4">
-                    <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
-                        <h3 className="text-2xl font-bold text-gray-800 mb-6 text-center">Add New User</h3>
-                        <form onSubmit={handleAddUser} className="space-y-4">
-                            <div>
-                                <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="newUserName">
-                                    Username:
-                                </label>
-                                <input
-                                    type="text"
-                                    id="newUserName"
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                    value={newUserName}
-                                    onChange={(e) => setNewUserName(e.target.value)}
-                                    required
-                                />
+            <div className={`modal fade ${showAddModal ? 'show d-block' : ''}`} tabIndex="-1" role="dialog" style={{ display: showAddModal ? 'block' : 'none' }}>
+                <div className="modal-dialog modal-dialog-centered" role="document">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h5 className="modal-title">Add New User</h5>
+                            <button type="button" className="btn-close" onClick={() => setShowAddModal(false)} aria-label="Close"></button>
+                        </div>
+                        <form onSubmit={handleAddUser}>
+                            <div className="modal-body">
+                                <div className="mb-3">
+                                    <label htmlFor="newUserName" className="form-label">Username:</label>
+                                    <input
+                                        type="text"
+                                        id="newUserName"
+                                        className="form-control"
+                                        value={newUserName}
+                                        onChange={(e) => setNewUserName(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                                <div className="mb-3">
+                                    <label htmlFor="newUserTeam" className="form-label">Team (Optional):</label>
+                                    <input
+                                        type="text"
+                                        id="newUserTeam"
+                                        className="form-control"
+                                        value={newUserTeam}
+                                        onChange={(e) => setNewUserTeam(e.target.value)}
+                                    />
+                                </div>
+                                <div className="mb-3">
+                                    <label htmlFor="newUserPassword" className="form-label">Password:</label>
+                                    <input
+                                        type="password"
+                                        id="newUserPassword"
+                                        className="form-control"
+                                        value={newUserPassword}
+                                        onChange={(e) => setNewUserPassword(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                                <div className="mb-3">
+                                    <label htmlFor="newUserRole" className="form-label">Role:</label>
+                                    <select
+                                        id="newUserRole"
+                                        className="form-select"
+                                        value={newUserRole}
+                                        onChange={(e) => setNewUserRole(e.target.value)}
+                                        required
+                                    >
+                                        {allowedRolesOptions.map(role => (
+                                            <option key={role} value={role}>{role.replace('_', ' ')}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                {error && <div className="alert alert-danger mt-3">{error}</div>}
                             </div>
-                            <div>
-                                <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="newUserTeam">
-                                    Team (Optional):
-                                </label>
-                                <input
-                                    type="text"
-                                    id="newUserTeam"
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                    value={newUserTeam}
-                                    onChange={(e) => setNewUserTeam(e.target.value)}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="newUserPassword">
-                                    Password:
-                                </label>
-                                <input
-                                    type="password"
-                                    id="newUserPassword"
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                    value={newUserPassword}
-                                    onChange={(e) => setNewUserPassword(e.target.value)}
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="newUserRole">
-                                    Role:
-                                </label>
-                                <select
-                                    id="newUserRole"
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                    value={newUserRole}
-                                    onChange={(e) => setNewUserRole(e.target.value)}
-                                    required
-                                >
-                                    {allowedRolesOptions.map(role => (
-                                        <option key={role} value={role}>{role.replace('_', ' ')}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="flex justify-end space-x-3">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowAddModal(false)}
-                                    className="bg-gray-300 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-400 transition duration-200"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 transition duration-200"
-                                >
-                                    Add User
-                                </button>
+                            <div className="modal-footer">
+                                <button type="button" className="btn btn-secondary" onClick={() => setShowAddModal(false)}>Cancel</button>
+                                <button type="submit" className="btn btn-primary">Add User</button>
                             </div>
                         </form>
                     </div>
                 </div>
-            )}
+            </div>
 
             {/* Edit User Modal */}
-            {showEditModal && editingUser && (
-                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center p-4">
-                    <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
-                        <h3 className="text-2xl font-bold text-gray-800 mb-6 text-center">Edit User: {editingUser.name}</h3>
-                        <form onSubmit={handleUpdateUser} className="space-y-4">
-                            <div>
-                                <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="editUserName">
-                                    Username:
-                                </label>
-                                <input
-                                    type="text"
-                                    id="editUserName"
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                                    value={editUserName}
-                                    onChange={(e) => setEditUserName(e.target.value)}
-                                    required
-                                />
+            <div className={`modal fade ${showEditModal ? 'show d-block' : ''}`} tabIndex="-1" role="dialog" style={{ display: showEditModal ? 'block' : 'none' }}>
+                <div className="modal-dialog modal-dialog-centered" role="document">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h5 className="modal-title">Edit User: {editingUser?.name}</h5>
+                            <button type="button" className="btn-close" onClick={() => setShowEditModal(false)} aria-label="Close"></button>
+                        </div>
+                        <form onSubmit={handleUpdateUser}>
+                            <div className="modal-body">
+                                <div className="mb-3">
+                                    <label htmlFor="editUserName" className="form-label">Username:</label>
+                                    <input
+                                        type="text"
+                                        id="editUserName"
+                                        className="form-control"
+                                        value={editUserName}
+                                        onChange={(e) => setEditUserName(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                                <div className="mb-3">
+                                    <label htmlFor="editUserTeam" className="form-label">Team:</label>
+                                    <input
+                                        type="text"
+                                        id="editUserTeam"
+                                        className="form-control"
+                                        value={editUserTeam}
+                                        onChange={(e) => setEditUserTeam(e.target.value)}
+                                    />
+                                </div>
+                                <div className="mb-3">
+                                    <label htmlFor="editUserRole" className="form-label">Role:</label>
+                                    <select
+                                        id="editUserRole"
+                                        className="form-select"
+                                        value={editUserRole}
+                                        onChange={(e) => setEditUserRole(e.target.value)}
+                                        required
+                                    >
+                                        {allowedRolesOptions.map(role => (
+                                            <option key={role} value={role}>{role.replace('_', ' ')}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="mb-3">
+                                    <label htmlFor="editUserPassword" className="form-label">New Password (leave blank to keep current):</label>
+                                    <input
+                                        type="password"
+                                        id="editUserPassword"
+                                        className="form-control"
+                                        value={editUserPassword}
+                                        onChange={(e) => setEditUserPassword(e.target.value)}
+                                    />
+                                </div>
+                                {error && <div className="alert alert-danger mt-3">{error}</div>}
                             </div>
-                            <div>
-                                <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="editUserTeam">
-                                    Team:
-                                </label>
-                                <input
-                                    type="text"
-                                    id="editUserTeam"
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                                    value={editUserTeam}
-                                    onChange={(e) => setEditUserTeam(e.target.value)}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="editUserRole">
-                                    Role:
-                                </label>
-                                <select
-                                    id="editUserRole"
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                                    value={editUserRole}
-                                    onChange={(e) => setEditUserRole(e.target.value)}
-                                    required
-                                >
-                                    {allowedRolesOptions.map(role => (
-                                        <option key={role} value={role}>{role.replace('_', ' ')}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="editUserPassword">
-                                    New Password (leave blank to keep current):
-                                </label>
-                                <input
-                                    type="password"
-                                    id="editUserPassword"
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                                    value={editUserPassword}
-                                    onChange={(e) => setEditUserPassword(e.target.value)}
-                                />
-                            </div>
-                            <div className="flex justify-end space-x-3">
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setShowEditModal(false);
-                                        setEditingUser(null);
-                                    }}
-                                    className="bg-gray-300 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-400 transition duration-200"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="bg-yellow-600 text-white py-2 px-4 rounded-md hover:bg-yellow-700 transition duration-200"
-                                >
-                                    Update User
-                                </button>
+                            <div className="modal-footer">
+                                <button type="button" className="btn btn-secondary" onClick={() => setShowEditModal(false)}>Cancel</button>
+                                <button type="submit" className="btn btn-warning">Update User</button>
                             </div>
                         </form>
                     </div>
                 </div>
-            )}
+            </div>
         </div>
     );
 }
