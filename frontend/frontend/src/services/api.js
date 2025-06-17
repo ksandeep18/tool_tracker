@@ -1,7 +1,7 @@
 // src/services/api.js
 import axios from 'axios';
 
-const API_URL = 'https://tool-tracker-2.onrender.com'; // Your backend server URL
+const API_URL = 'https://tool-tracker-back.onrender.com'; // Your backend server URL  https://tool-tracker-back.onrender.com
 
 const api = axios.create({
     baseURL: API_URL,
