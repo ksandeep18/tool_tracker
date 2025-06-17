@@ -23,22 +23,32 @@ app.use(cors());
 app.use(express.json());
 
 // --- Database Connection ---
-
-const pool = new Pool({
-    user: process.env.DB_USER,
-    host: process.env.DB_HOST,
-    database: process.env.DB_DATABASE,
-    password: process.env.DB_PASSWORD,
-    port: process.env.DB_PORT,
-});
+let pool;
+if (process.env.DATABASE_URL) {
+    // Use DATABASE_URL (Render, production, or single-string connection)
+    pool = new Pool({
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false }
+    });
+} else {
+    // Use individual environment variables (local dev)
+    pool = new Pool({
+        user: process.env.DB_USER,
+        host: process.env.DB_HOST,
+        database: process.env.DB_DATABASE || process.env.DB_NAME,
+        password: process.env.DB_PASSWORD,
+        port: process.env.DB_PORT,
+        ssl: process.env.DB_HOST !== 'localhost' ? { rejectUnauthorized: false } : false
+    });
+}
 
 // Test Database Connection
 pool.connect()
-    .then(client => {
+    .then((client) => {
         console.log('Connected to PostgreSQL database!');
         client.release();
     })
-    .catch(err => {
+    .catch((err) => {
         console.error('Error connecting to PostgreSQL database:', err.message);
         process.exit(1); // Exit if database connection fails at startup
     });
@@ -297,9 +307,6 @@ app.post('/return', authenticateToken, authorizeRole(['user', 'tool_admin', 'sup
     }
 });
 
-
-
-
 // GET /history: View all checkout/return history
 app.get('/history', authenticateToken, authorizeRole(['tool_admin', 'super_admin']), async (req, res) => {
     try {
@@ -541,12 +548,12 @@ app.delete('/users/:id', authenticateToken, authorizeRole(['super_admin']), asyn
         res.status(200).json({ message: 'User deleted successfully.' });
 
     } catch (err) {
-        console.error('Error deleting user (Super Admin):', err.message);
+        console.error('Error deleting user:', err.message);
         res.status(500).json({ message: 'Server error deleting user.' });
     }
 });
 
-// --- Start the Server ---
+// --- Start Server ---
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`Server is running on port ${PORT}.`);
 });
